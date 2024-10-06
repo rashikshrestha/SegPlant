@@ -1,2 +1,3 @@
-# semantic_segmentation_of_plants
-Semantic Segmentation of parts of plants
+# SegPlant: Semantic Segmentation for plants
+
+Segments branches and leaves of the plants.
