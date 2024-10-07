@@ -3,6 +3,7 @@ import torch
 from torchvision.transforms.functional import to_pil_image
 from PIL import Image
 import random
+import matplotlib.pyplot as plt
 
 def tensor_to_numpy_image(img_tensor):
     """
@@ -51,9 +52,31 @@ def mask_overlay(image, branch, leaf):
     return np.array(blended_image)
 
 
-def mask_to_points(mask, num=5):
+def mask_to_points(mask, num=3):
     segmented_points = torch.argwhere(mask == 1)
-    selected_indices = random.sample(range(len(segmented_points)), num)
-    selected_points = segmented_points[selected_indices]
-    selected_points = selected_points[:,1:]
-    return selected_points
+    if len(segmented_points) > num:
+        selected_indices = random.sample(range(len(segmented_points)), num)
+        selected_points = segmented_points[selected_indices]
+        selected_points = selected_points[:,1:]
+        # print(selected_points)
+        
+        selected_points[:,[0,1]] = selected_points[:,[1,0]]
+
+        # print(selected_points.shape)
+        return selected_points
+    else:
+        return torch.zeros((3,2))
+
+def plot_points(image, points):
+    image_np = image.permute(1, 2, 0).cpu().numpy()*255.
+    image_np = image_np.astype(np.uint8)
+    plt.imshow(image_np)
+    
+    points_np = points.cpu().numpy()
+    
+    plt.scatter(points_np[0,:,1], points_np[0,:,0], c='blue', marker='x', label='branch')
+    plt.scatter(points_np[1,:,1], points_np[1,:,0], c='red', marker='.', label='leaf')
+    plt.legend()
+    plt.xticks([])
+    plt.yticks([])
+    plt.savefig('plots.png', bbox_inches='tight', pad_inches=0)
