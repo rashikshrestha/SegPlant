@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -16,15 +17,29 @@ class BlenderPlantsDataset(Dataset):
       self.path = Path(path)
       self.resize = resize
       self.get_mask = get_mask
-      self.idx = np.arange(0,4510) if split == 'train' else np.arange(4510, 5637)
+      
+      # Get idx as per the split type
+      if split == 'train':
+        self.idx = np.arange(0,4510)
+      elif split == 'eval':
+        self.idx = np.arange(4510, 5637)
+      else:
+        files = os.listdir(self.path/'images')
+        self.idx = []
+        for file in files:
+          self.idx.append(int(file.split('.')[0]))
+        self.idx.sort()
+        self.idx = np.array(self.idx)
+         
       # self.idx = np.arange(0,45,1) if split == 'train' else np.arange(4501, 4600)
         
     def __len__(self):
       return len(self.idx)
         
     def __getitem__(self, idx):
+      img_id = self.idx[idx]
       # Read Image
-      img_path = self.path/'images'/f"{idx:05d}.png"
+      img_path = self.path/'images'/f"{img_id:05d}.png"
       img = Image.open(img_path)
       if self.resize is not None: img = img.resize(self.resize)
       if img.mode != 'RGB': img = img.convert('RGB')
@@ -35,7 +50,7 @@ class BlenderPlantsDataset(Dataset):
          return img
      
       # Read branch mask
-      branch_path = self.path/'masks'/'branch'/f"{idx:05d}_1.png"
+      branch_path = self.path/'masks'/'branch'/f"{img_id:05d}_1.png"
       branch = Image.open(branch_path)
       if self.resize is not None: branch = branch.resize(self.resize)
       branch = branch.convert('L')
@@ -44,7 +59,7 @@ class BlenderPlantsDataset(Dataset):
       branch = torch.as_tensor(branch, dtype=torch.float32)[None]
 
       # Read leaf mask
-      leaf_path = self.path/'masks'/'leaf'/f"{idx:05d}_1.png"
+      leaf_path = self.path/'masks'/'leaf'/f"{img_id:05d}_1.png"
       leaf = Image.open(leaf_path)
       if self.resize is not None: leaf = leaf.resize(self.resize)
       leaf = leaf.convert('L')
