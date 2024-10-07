@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torchvision.transforms.functional import to_pil_image
 from PIL import Image
+import random
 
 def tensor_to_numpy_image(img_tensor):
     """
@@ -48,3 +49,11 @@ def mask_overlay(image, branch, leaf):
     blended_image = Image.blend(image_masked_pil, image_pil, alpha)
     
     return np.array(blended_image)
+
+
+def mask_to_points(mask, num=5):
+    segmented_points = torch.argwhere(mask == 1)
+    selected_indices = random.sample(range(len(segmented_points)), num)
+    selected_points = segmented_points[selected_indices]
+    selected_points = selected_points[:,1:]
+    return selected_points
