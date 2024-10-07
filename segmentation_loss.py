@@ -9,8 +9,8 @@ class DiceLoss(nn.Module):
         self.get_dice_iou = get_dice_iou
 
     def forward(self, inputs, targets, smooth=1):
-        inputs = inputs.view(-1)
-        targets = targets.view(-1)
+        inputs = inputs.reshape(-1)
+        targets = targets.reshape(-1)
         intersection = (inputs * targets).sum()
         inputs_sum = inputs.sum()
         targets_sum = targets.sum()
