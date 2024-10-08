@@ -1,4 +1,4 @@
-name: hug
+name: segplant
 channels:
   - pytorch
   - nvidia
