@@ -51,6 +51,47 @@ def mask_overlay(image, branch, leaf):
     
     return np.array(blended_image)
 
+def single_mask_overlay(image, branch, type='branch'):
+    """
+    Parameters
+    ---------
+    image: torch.Tensor
+        (3, H, W) range of 0-1
+    branch, leaf: torch.Tensor
+        (1, H, W) range of 0-1
+   
+    Returns
+    -------
+    masked_image: np.array
+        (3, H, W) range 0-255
+    """
+    th = 0.9
+    branch_mask = torch.where(branch>th, 1.0, 0.0)
+
+    padding = torch.zeros_like(branch_mask)
+   
+    if type=='branch':
+        branch_mask_rgb = torch.concat((padding, padding, branch_mask), dim=0)
+    else:
+        branch_mask_rgb = torch.concat((branch_mask, padding, padding), dim=0)
+        
+    
+    # Image Tensor to Numpy
+    image_np = tensor_to_numpy_image(image) 
+    branch_mask_rgb_np = tensor_to_numpy_image(branch_mask_rgb)
+    
+    # Mask
+    image_masked = image_np.astype(np.uint64) + branch_mask_rgb_np.astype(np.uint64)
+    image_masked = np.clip(image_masked, 0, 255).astype(np.uint8)
+    image_masked_pil = Image.fromarray(image_masked)
+    image_pil = Image.fromarray(image_np)
+   
+    # Blend Images 
+    alpha = 0.3
+    blended_image = Image.blend(image_masked_pil, image_pil, alpha)
+    
+    return np.array(blended_image)
+
 
 def mask_to_points(mask, num=3):
     segmented_points = torch.argwhere(mask == 1)
