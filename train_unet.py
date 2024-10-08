@@ -1,4 +1,5 @@
 import random
+import sys
 from tqdm import tqdm
 import numpy as np
 import torch
@@ -42,9 +43,15 @@ def train_eval(epoch, data_loader, mode='train', jitter=None):
 
 
 if __name__=='__main__':
+  if len(sys.argv) < 2:
+    print("Usage: python train_unet.py /path/to/dataset")
+    exit()
+  
   print("Training Script started.")
 
-  # Parameters
+  # ----------- Parameters -------------------
+  dataset_dir = sys.argv[1]
+  # dataset_dir = "/home/rashik_shrestha/dataset/blender_plants"
   seed = 0
   device = 'cuda'
   start_epoch = 0
@@ -52,7 +59,7 @@ if __name__=='__main__':
   learning_rate = 0.001
   batch_size = 4
   resize = (640,480)
-  dataset_dir = "/home/rashik_shrestha/dataset/blender_plants"
+  # ---------------------------------------------
 
   # Random Seed
   torch.manual_seed(seed)
