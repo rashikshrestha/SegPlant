@@ -12,24 +12,29 @@ from segmentation_loss import DiceLoss
 
 if __name__=='__main__':
     print("Testing Unet")
-    
-    dataset_dir = "test_data/blender_plants"
+   
+    # -------------- Parameters ---------------- 
+    weights = 'models/unet.pt'
+    dataset_dir = "test_data/real_plants"
     resize = (640,480)
     device = 'cuda'
-    out_dir = 'output/unet_blender'
-    get_mask = True
+    out_dir = 'output/unet'
+    get_mask = False
+    get_point = False
+    # ------------------------------------------
 
     # Setup output path    
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
    
     # Test Dataset 
-    test_dataset = BlenderPlantsDataset(dataset_dir, split='test', resize=resize, get_mask=get_mask)
+    test_dataset = BlenderPlantsDataset(dataset_dir, split='test', resize=resize, get_mask=get_mask, get_points=get_point)
     print(f"Test dataset len: {len(test_dataset)}")
     
     # UNet Model
     model = UNet(dimensions=2).to(device)
-    model.load_state_dict(torch.load('models/e5_0.038.pt', weights_only=True))
+    model.load_state_dict(torch.load(weights, weights_only=True))
+    print("Using weights: ", weights)
 
     # Loss fn
     loss_fn = DiceLoss(get_dice_iou=True)
