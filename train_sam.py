@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms.functional import to_pil_image
+import sys
 
 from transformers import SamModel, SamProcessor
 
@@ -14,7 +15,7 @@ from blender_plants_dataset import BlenderPlantsDataset
 from segmentation_loss import DiceLoss
 
 
-def train_eval(epoch, data_loader, mode='train', jitter=None):
+def train_eval(epoch, data_loader, mode='train', jitter=None, segtype=0):
   """
   Function to Train and Evaluate the model
   """
@@ -23,7 +24,10 @@ def train_eval(epoch, data_loader, mode='train', jitter=None):
   for images, branch, leaf in tqdm(data_loader, leave=False, desc=F"{mode} e{epoch+1}"):
     images, branch, leaf = images.to(device), branch.to(device), leaf.to(device)
     masks = torch.concat((branch, leaf), dim=1)
-    masks = branch
+    if segtype==0:
+      masks = branch
+    else:
+      masks = leaf
     if jitter is not None:
       images = jitter(images)
 
@@ -60,6 +64,10 @@ def train_eval(epoch, data_loader, mode='train', jitter=None):
 
 
 if __name__=='__main__':
+  if len(sys.argv) < 3:
+    print("Usage: python train_sam.py /path/to/dataset <0=branch, 1=leaf>")
+    exit()
+    
   print("Training Script started.")
 
   # Parameters
@@ -70,9 +78,10 @@ if __name__=='__main__':
   learning_rate = 1e-5
   batch_size = 4
   resize = (640,480)
-  dataset_dir = "/home/rashik_shrestha/dataset/blender_plants"
-  # model_path = "facebook/sam-vit-huge"
-  model_path = "models/e1_0.513"
+  dataset_dir = sys.argv[1]
+  segtype = int(sys.argv[2])
+  model_path = "facebook/sam-vit-huge"
+  # model_path = "models/e1_0.513"
 
   # Random Seed
   torch.manual_seed(seed)
@@ -84,8 +93,8 @@ if __name__=='__main__':
     transforms.ColorJitter(0.0, 0.3, 0.5, 0.1)
   ])
   jitter_transform = None
-  train_dataset = BlenderPlantsDataset(dataset_dir, split='train', resize=resize)
-  eval_dataset = BlenderPlantsDataset(dataset_dir, split='eval', resize=resize)
+  train_dataset = BlenderPlantsDataset(dataset_dir, split='train', resize=resize, overwrite_mask_shape=True)
+  eval_dataset = BlenderPlantsDataset(dataset_dir, split='eval', resize=resize, overwrite_mask_shape=True)
 
 
   train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -115,8 +124,8 @@ if __name__=='__main__':
   eval_losses = []
   for epoch in range(start_epoch, start_epoch+num_epochs):
     # Train and Evalutate
-    train_loss = train_eval(epoch, train_loader, 'train', jitter=jitter_transform)
-    # eval_loss = train_eval(epoch, eval_loader, 'eval', jitter=jitter_transform)
+    train_loss = train_eval(epoch, train_loader, 'train', jitter=jitter_transform, segtype=segtype)
+    eval_loss = train_eval(epoch, eval_loader, 'eval', jitter=jitter_transform, segtype=segtype)
     eval_loss = train_loss
     
     # Accumulate losses
