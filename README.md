@@ -35,7 +35,8 @@ python test_unet.py
 
 Using SAM Model
 ```bash
-python test_sam.py
+python test_sam.py 0 # for branch segmentation
+python test_sam.py 1 # for leaf segmentation
 ```
 
 # Train
@@ -44,10 +45,20 @@ Download BlenderPlants dataset [here](https://drive.google.com/file/d/1ff38P_HFd
 
 Train UNet model:
 ```bash
-python train_unet.py
+python train_unet.py /path/to/dataset
 ```
 
 Fine-tune SAM:
 ```bash
-python train_sam.py
+python train_sam.py /path/to/dataset 0 # for branch segmentation
+python train_sam.py /path/to/dataset 1 # for leaf segmentation
+```
+
+# For advanced users
+
+For more detail control over code, change the parameters listed at the top of `main` in each python script. The parameters are enclosed as:
+```python
+# -------- Parameters -------
+# parameters here
+# ---------------------------
 ```
